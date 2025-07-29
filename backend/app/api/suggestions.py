@@ -62,12 +62,15 @@ async def list_suggestions(
         if dateRange == "today":
             start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
             end_date = now.replace(hour=23, minute=59, second=59, microsecond=999999)
+        elif dateRange == "upcoming":
+            start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+            end_date = now + timedelta(days=3)
         elif dateRange == "week":
-            start_date = now - timedelta(days=7)
-            end_date = now
+            start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+            end_date = now + timedelta(days=7)
         elif dateRange == "month":
-            start_date = now - timedelta(days=30)
-            end_date = now
+            start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+            end_date = now + timedelta(days=30)
         # "all" means no date filter
     
     # Build query

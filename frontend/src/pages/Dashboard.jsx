@@ -98,6 +98,7 @@ const Dashboard = () => {
                 className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md"
               >
                 <option value="pending">Pendentes</option>
+                <option value="snoozed">Adiadas</option>
                 <option value="accepted">Aceitas</option>
                 <option value="rejected">Rejeitadas</option>
                 <option value="all">Todas</option>
@@ -127,9 +128,10 @@ const Dashboard = () => {
                 onChange={(e) => handleFilterChange('dateRange', e.target.value)}
                 className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md"
               >
-                <option value="today">Hoje</option>
-                <option value="week">Esta Semana</option>
-                <option value="month">Este Mês</option>
+                <option value="today">Apenas hoje</option>
+                <option value="upcoming">Hoje e próximos 3 dias</option>
+                <option value="week">Próximos 7 dias</option>
+                <option value="month">Próximos 30 dias</option>
                 <option value="all">Todas</option>
               </select>
             </div>
