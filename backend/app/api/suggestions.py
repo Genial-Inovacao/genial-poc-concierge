@@ -106,7 +106,7 @@ async def list_suggestions(
     
     # Mark as viewed
     for suggestion in suggestions:
-        if suggestion.status == SuggestionStatus.PENDING:
+        if suggestion.status == "pending":
             # Check if already viewed
             existing_view = db.query(Interaction).filter(
                 and_(
@@ -143,22 +143,22 @@ async def get_suggestion_stats(
     
     pending_suggestions = db.query(Suggestion).filter(
         Suggestion.user_id == current_user.id,
-        Suggestion.status == SuggestionStatus.PENDING
+        Suggestion.status == "pending"
     ).count()
     
     accepted_suggestions = db.query(Suggestion).filter(
         Suggestion.user_id == current_user.id,
-        Suggestion.status == SuggestionStatus.ACCEPTED
+        Suggestion.status == "accepted"
     ).count()
     
     rejected_suggestions = db.query(Suggestion).filter(
         Suggestion.user_id == current_user.id,
-        Suggestion.status == SuggestionStatus.REJECTED
+        Suggestion.status == "rejected"
     ).count()
     
     executed_suggestions = db.query(Suggestion).filter(
         Suggestion.user_id == current_user.id,
-        Suggestion.status == SuggestionStatus.EXECUTED
+        Suggestion.status == "executed"
     ).count()
     
     # Calculate rates
@@ -189,7 +189,7 @@ async def get_suggestion_stats(
     # Calculate average time to action
     executed_with_time = db.query(Suggestion).filter(
         Suggestion.user_id == current_user.id,
-        Suggestion.status == SuggestionStatus.EXECUTED,
+        Suggestion.status == "executed",
         Suggestion.executed_at.isnot(None)
     ).all()
     
@@ -300,7 +300,7 @@ async def create_suggestion(
         priority=suggestion_data.priority,
         scheduled_date=suggestion_data.scheduled_date,
         context_data=suggestion_data.context_data,
-        status=SuggestionStatus.PENDING
+        status="pending"
     )
     
     db.add(new_suggestion)

@@ -204,20 +204,20 @@ Gere sugestões criativas e verdadeiramente úteis para o usuário."""
         formatted = []
         
         type_mapping = {
-            'anniversary': 'ANNIVERSARY',
-            'purchase': 'PURCHASE',
-            'routine': 'ROUTINE',
-            'seasonal': 'SEASONAL',
-            'saving': 'SAVINGS',
-            'savings': 'SAVINGS',
-            'health': 'ROUTINE',  # Map health to routine as we don't have health type
-            'reminder': 'REMINDER',
-            'recommendation': 'RECOMMENDATION'
+            'anniversary': 'anniversary',
+            'purchase': 'purchase',
+            'routine': 'routine',
+            'seasonal': 'seasonal',
+            'saving': 'savings',
+            'savings': 'savings',
+            'health': 'routine',  # Map health to routine as we don't have health type
+            'reminder': 'reminder',
+            'recommendation': 'recommendation'
         }
         
         for suggestion in raw_suggestions:
             try:
-                suggestion_type = type_mapping.get(suggestion.get('type', '').lower(), 'ROUTINE')
+                suggestion_type = type_mapping.get(suggestion.get('type', '').lower(), 'routine')
                 
                 formatted.append({
                     'type': suggestion_type,

@@ -54,7 +54,7 @@ class Suggestion(Base):
     content = Column(Text, nullable=False)
     
     type = Column(
-        Enum(SuggestionType),
+        String(50),
         nullable=False,
         index=True
     )
@@ -66,9 +66,9 @@ class Suggestion(Base):
     )  # 1-10, where 10 is highest priority
     
     status = Column(
-        Enum(SuggestionStatus),
+        String(50),
         nullable=False,
-        default=SuggestionStatus.PENDING,
+        default="pending",
         index=True
     )
     
@@ -116,25 +116,25 @@ class Suggestion(Base):
     
     def mark_as_executed(self):
         """Mark suggestion as executed."""
-        self.status = SuggestionStatus.EXECUTED
+        self.status = "executed"
         self.executed_at = datetime.now(timezone.utc)
     
     def mark_as_accepted(self):
         """Mark suggestion as accepted."""
-        self.status = SuggestionStatus.ACCEPTED
+        self.status = "accepted"
     
     def mark_as_rejected(self):
         """Mark suggestion as rejected."""
-        self.status = SuggestionStatus.REJECTED
+        self.status = "rejected"
     
     def mark_as_snoozed(self):
         """Mark suggestion as snoozed."""
-        self.status = SuggestionStatus.SNOOZED
+        self.status = "snoozed"
     
     @property
     def is_active(self) -> bool:
         """Check if suggestion is still active (pending or snoozed)."""
-        return self.status in [SuggestionStatus.PENDING, SuggestionStatus.SNOOZED]
+        return self.status in ["pending", "snoozed"]
     
     @property
     def is_overdue(self) -> bool:

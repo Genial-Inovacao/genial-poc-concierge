@@ -130,7 +130,7 @@ class AIEngine:
                     and_(
                         Suggestion.user_id == user.id,
                         Suggestion.type == SuggestionType.ANNIVERSARY,
-                        Suggestion.status.in_([SuggestionStatus.PENDING, SuggestionStatus.ACCEPTED]),
+                        Suggestion.status.in_(["pending", "accepted"]),
                         Suggestion.scheduled_date == user.profile.spouse_birth_date.replace(year=today.year)
                     )
                 ).first()
@@ -140,13 +140,13 @@ class AIEngine:
                     restaurant_suggestion = self._find_anniversary_restaurant_pattern(user, user.profile.spouse_birth_date)
                     
                     suggestions.append({
-                        "type": SuggestionType.ANNIVERSARY,
+                        "type": "anniversary",  # String minúscula
                         "content": f"O aniversário de {user.profile.spouse_name} está chegando ({user.profile.spouse_birth_date.strftime('%d/%m')}). " +
                                   (f"Deseja que eu reserve o {restaurant_suggestion}?" if restaurant_suggestion 
                                    else "Gostaria de fazer uma reserva em algum restaurante especial?"),
                         "priority": Priority.HIGH if days_until <= 3 else Priority.MEDIUM,
                         "scheduled_date": user.profile.spouse_birth_date.replace(year=today.year),
-                        "context_data": str({
+                        "context_data": json.dumps({
                             "person": user.profile.spouse_name,
                             "occasion": "birthday",
                             "days_until": days_until,
@@ -157,13 +157,13 @@ class AIEngine:
                     # Flower suggestion based on past behavior
                     if self._has_bought_flowers_for_occasions(user):
                         suggestions.append({
-                            "type": SuggestionType.PURCHASE,
+                            "type": "purchase",  # String minúscula
                             "content": f"Nos últimos anos você enviou flores para {user.profile.spouse_name}. " +
                                       "Posso providenciar um buquê especial?",
                             # "category": "gift",
                             "priority": Priority.MEDIUM,
                             "scheduled_date": (user.profile.spouse_birth_date.replace(year=today.year) - timedelta(days=1)),
-                            "context_data": str( {
+                            "context_data": json.dumps({
                                 "person": user.profile.spouse_name,
                                 "occasion": "birthday",
                                 "item": "flowers"
@@ -176,12 +176,12 @@ class AIEngine:
             
             if days_until == 1:  # Tomorrow
                 suggestions.append({
-                    "type": SuggestionType.SEASONAL,
+                    "type": "seasonal",  # String minúscula
                     "content": "Amanhã é seu aniversário! 🎉 Gostaria de algumas sugestões para comemorar?",
                     # "category": "personal",
                     "priority": Priority.LOW,
                     "scheduled_date": user.profile.birth_date.replace(year=today.year),
-                    "context_data": str({
+                    "context_data": json.dumps({
                         "occasion": "user_birthday"
                     })
                 })
@@ -238,13 +238,13 @@ class AIEngine:
                     
                     if not recent_suggestion:
                         suggestions.append({
-                            "type": SuggestionType.ROUTINE,
+                            "type": "routine",  # String minúscula
                             "content": f"Está na hora de {self._humanize_transaction(category, description)}? " +
                                       f"Você costuma fazer isso a cada {int(avg_interval)} dias.",
                             # "category": category,
                             "priority": Priority.LOW,
                             "scheduled_date": today,
-                            "context_data": str( {
+                            "context_data": json.dumps({
                                 "pattern": "recurring",
                                 # "category": category,
                                 "description": description,
@@ -339,6 +339,22 @@ def run_ai_analysis_for_all_users():
             
             # Save suggestions to database
             for suggestion_data in suggestions:
+                # Garantir que type seja uma string minúscula
+                if hasattr(suggestion_data.get('type'), 'value'):
+                    # É um objeto Enum, pegar o valor
+                    suggestion_data['type'] = suggestion_data['type'].value
+                else:
+                    # É uma string, garantir que seja minúscula
+                    suggestion_data['type'] = str(suggestion_data['type']).lower()
+                
+                # Garantir que status seja 'pending' (minúsculo)
+                if 'status' not in suggestion_data:
+                    suggestion_data['status'] = 'pending'
+                elif hasattr(suggestion_data.get('status'), 'value'):
+                    suggestion_data['status'] = suggestion_data['status'].value
+                else:
+                    suggestion_data['status'] = str(suggestion_data['status']).lower()
+                
                 suggestion = Suggestion(
                     user_id=user.id,
                     **suggestion_data

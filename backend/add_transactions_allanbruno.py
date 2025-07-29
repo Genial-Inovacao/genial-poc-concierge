@@ -1,160 +1,205 @@
-from datetime import datetime, timezone, timedelta
+#\!/usr/bin/env python3
+"""
+Adiciona 15 transações variadas para o usuário allanbruno.
+"""
+
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
-import random
-from sqlalchemy.orm import Session
-from app.database import get_db, engine
+from app.database import SessionLocal
 from app.models import User, Transaction
+import uuid
+import random
 
-# Transaction categories and types
-CATEGORIES = ['alimentacao', 'transporte', 'lazer', 'saude', 'educacao', 'compras', 'servicos']
-TYPES = ['expense', 'savings', 'income']
-
-def create_transactions_for_allanbruno():
-    db = next(get_db())
+def add_transactions():
+    db = SessionLocal()
     
-    # Find allanbruno user
-    user = db.query(User).filter(User.username == "allanbruno").first()
-    if not user:
-        print("User allanbruno not found!")
-        return
-    
-    print(f"Creating transactions for user: {user.username}")
-    
-    # Create transactions for the last 90 days
-    now = datetime.now(timezone.utc)
-    transactions = []
-    
-    # Regular monthly expenses
-    for i in range(3):  # Last 3 months
-        month_offset = now - timedelta(days=30 * i)
+    try:
+        # Buscar usuário allanbruno
+        user = db.query(User).filter(User.username == "allanbruno").first()
+        if not user:
+            print("❌ Usuário 'allanbruno' não encontrado\!")
+            return
         
-        # Rent
-        transactions.append(Transaction(
-            user_id=user.id,
-            type='expense',
-            amount=Decimal('2500.00'),
-            date=month_offset.replace(day=5),
-            category='servicos',
-            description='Aluguel do apartamento',
-            location='São Paulo, SP'
-        ))
+        print(f"✅ Usuário encontrado: {user.username}")
         
-        # Internet
-        transactions.append(Transaction(
-            user_id=user.id,
-            type='expense',
-            amount=Decimal('120.00'),
-            date=month_offset.replace(day=10),
-            category='servicos',
-            description='Internet fibra 500MB',
-            location='São Paulo, SP'
-        ))
-        
-        # Gym
-        transactions.append(Transaction(
-            user_id=user.id,
-            type='expense',
-            amount=Decimal('180.00'),
-            date=month_offset.replace(day=1),
-            category='saude',
-            description='Academia SmartFit',
-            location='São Paulo, SP'
-        ))
-    
-    # Recent transactions (last 30 days)
-    for i in range(30):
-        date = now - timedelta(days=i)
-        
-        # Daily coffee
-        if random.random() > 0.3:  # 70% chance of buying coffee
-            transactions.append(Transaction(
-                user_id=user.id,
-                type='expense',
-                amount=Decimal(f'{random.uniform(12, 25):.2f}'),
-                date=date.replace(hour=8, minute=random.randint(0, 59)),
-                category='alimentacao',
-                description='Café da manhã - Starbucks',
-                location='São Paulo, SP'
-            ))
-        
-        # Lunch (weekdays)
-        if date.weekday() < 5 and random.random() > 0.2:
-            transactions.append(Transaction(
-                user_id=user.id,
-                type='expense',
-                amount=Decimal(f'{random.uniform(25, 45):.2f}'),
-                date=date.replace(hour=12, minute=random.randint(0, 59)),
-                category='alimentacao',
-                description=random.choice(['iFood', 'Restaurante', 'Padaria', 'Sushi']),
-                location='São Paulo, SP'
-            ))
-        
-        # Random expenses
-        if random.random() > 0.7:
-            category = random.choice(['transporte', 'lazer', 'compras'])
-            if category == 'transporte':
-                descriptions = ['Uber', 'Gasolina', '99', 'Metrô']
-                amount_range = (15, 60)
-            elif category == 'lazer':
-                descriptions = ['Cinema', 'Netflix', 'Spotify', 'Bar', 'Restaurante']
-                amount_range = (20, 150)
-            else:  # compras
-                descriptions = ['Mercado', 'Farmácia', 'Amazon', 'Roupas']
-                amount_range = (30, 300)
+        # Criar 15 transações variadas
+        now = datetime.now(timezone.utc)
+        transactions_data = [
+            # Alimentação
+            {
+                "type": "expense",
+                "amount": Decimal("45.90"),
+                "date": now - timedelta(days=1),
+                "category": "alimentacao",
+                "location": "São Paulo, SP",
+                "description": "Almoço - Restaurante Italiano"
+            },
+            {
+                "type": "expense",
+                "amount": Decimal("32.50"),
+                "date": now - timedelta(days=2),
+                "category": "alimentacao",
+                "location": "São Paulo, SP",
+                "description": "Café da manhã - Padaria Bella Vista"
+            },
+            {
+                "type": "expense",
+                "amount": Decimal("89.00"),
+                "date": now - timedelta(days=3),
+                "category": "alimentacao",
+                "location": "São Paulo, SP",
+                "description": "Jantar - Churrascaria"
+            },
             
-            transactions.append(Transaction(
+            # Transporte
+            {
+                "type": "expense",
+                "amount": Decimal("250.00"),
+                "date": now - timedelta(days=4),
+                "category": "transporte",
+                "location": "Posto Shell - Marginal",
+                "description": "Combustível - Gasolina"
+            },
+            {
+                "type": "expense",
+                "amount": Decimal("45.00"),
+                "date": now - timedelta(days=5),
+                "category": "transporte",
+                "location": "São Paulo, SP",
+                "description": "Uber - Viagens diversas"
+            },
+            
+            # Saúde
+            {
+                "type": "expense",
+                "amount": Decimal("350.00"),
+                "date": now - timedelta(days=6),
+                "category": "saude",
+                "location": "São Paulo, SP",
+                "description": "Consulta médica - Cardiologista"
+            },
+            {
+                "type": "expense",
+                "amount": Decimal("89.90"),
+                "date": now - timedelta(days=7),
+                "category": "saude",
+                "location": "Farmácia",
+                "description": "Medicamentos"
+            },
+            
+            # Lazer
+            {
+                "type": "expense",
+                "amount": Decimal("120.00"),
+                "date": now - timedelta(days=8),
+                "category": "lazer",
+                "location": "Shopping Iguatemi",
+                "description": "Cinema - Ingressos família"
+            },
+            {
+                "type": "expense",
+                "amount": Decimal("200.00"),
+                "date": now - timedelta(days=9),
+                "category": "lazer",
+                "location": "Teatro Municipal",
+                "description": "Show musical"
+            },
+            
+            # Compras
+            {
+                "type": "expense",
+                "amount": Decimal("450.00"),
+                "date": now - timedelta(days=10),
+                "category": "compras",
+                "location": "Shopping Center Norte",
+                "description": "Roupas - Presente para Juju"
+            },
+            {
+                "type": "expense",
+                "amount": Decimal("299.00"),
+                "date": now - timedelta(days=11),
+                "category": "compras",
+                "location": "Mercado Livre",
+                "description": "Eletrônicos - Fone de ouvido"
+            },
+            
+            # Serviços
+            {
+                "type": "expense",
+                "amount": Decimal("39.90"),
+                "date": now - timedelta(days=12),
+                "category": "servicos",
+                "location": "Online",
+                "description": "Netflix - Assinatura mensal"
+            },
+            {
+                "type": "expense",
+                "amount": Decimal("89.90"),
+                "date": now - timedelta(days=13),
+                "category": "servicos",
+                "location": "Academia",
+                "description": "SmartFit - Mensalidade"
+            },
+            
+            # Receitas
+            {
+                "type": "income",
+                "amount": Decimal("2500.00"),
+                "date": now - timedelta(days=15),
+                "category": "salario",
+                "location": None,
+                "description": "Freelance - Projeto desenvolvimento"
+            },
+            
+            # Investimento
+            {
+                "type": "savings",
+                "amount": Decimal("1500.00"),
+                "date": now - timedelta(days=20),
+                "category": "investimento",
+                "location": None,
+                "description": "Aplicação Tesouro Direto"
+            }
+        ]
+        
+        # Inserir transações
+        print("\n💳 Adicionando transações:")
+        for trans_data in transactions_data:
+            transaction = Transaction(
+                id=str(uuid.uuid4()),
                 user_id=user.id,
-                type='expense',
-                amount=Decimal(f'{random.uniform(*amount_range):.2f}'),
-                date=date.replace(hour=random.randint(10, 22), minute=random.randint(0, 59)),
-                category=category,
-                description=random.choice(descriptions),
-                location='São Paulo, SP'
-            ))
-    
-    # Some savings
-    for i in range(2):  # Last 2 months
-        month_offset = now - timedelta(days=30 * i)
-        transactions.append(Transaction(
-            user_id=user.id,
-            type='savings',
-            amount=Decimal('500.00'),
-            date=month_offset.replace(day=25),
-            category='investimento',
-            description='Poupança mensal',
-            location='São Paulo, SP'
-        ))
-    
-    # Income (salary)
-    for i in range(3):  # Last 3 months
-        month_offset = now - timedelta(days=30 * i)
-        transactions.append(Transaction(
-            user_id=user.id,
-            type='income',
-            amount=Decimal('8500.00'),
-            date=month_offset.replace(day=28),
-            category='salario',
-            description='Salário mensal',
-            location='São Paulo, SP'
-        ))
-    
-    # Add all transactions
-    for transaction in transactions:
-        db.add(transaction)
-    
-    db.commit()
-    print(f"Created {len(transactions)} transactions for allanbruno")
-    
-    # Show summary
-    total_expenses = sum(t.amount for t in transactions if t.type == 'expense')
-    total_savings = sum(t.amount for t in transactions if t.type == 'savings')
-    total_income = sum(t.amount for t in transactions if t.type == 'income')
-    
-    print(f"\nSummary:")
-    print(f"Total expenses: R$ {total_expenses:.2f}")
-    print(f"Total savings: R$ {total_savings:.2f}")
-    print(f"Total income: R$ {total_income:.2f}")
-    print(f"Net: R$ {(total_income - total_expenses + total_savings):.2f}")
+                created_at=datetime.now(timezone.utc),
+                **trans_data
+            )
+            db.add(transaction)
+            print(f"  ➕ {trans_data['description']} - R$ {trans_data['amount']:.2f} ({trans_data['type']})")
+        
+        db.commit()
+        print(f"\n✅ {len(transactions_data)} transações adicionadas com sucesso\!")
+        
+        # Mostrar resumo
+        total_expense = sum(t['amount'] for t in transactions_data if t['type'] == 'expense')
+        total_income = sum(t['amount'] for t in transactions_data if t['type'] == 'income')
+        total_savings = sum(t['amount'] for t in transactions_data if t['type'] == 'savings')
+        
+        print("\n📊 Resumo:")
+        print(f"  - Total de despesas: R$ {total_expense:.2f}")
+        print(f"  - Total de receitas: R$ {total_income:.2f}")
+        print(f"  - Total investido: R$ {total_savings:.2f}")
+        print(f"  - Saldo: R$ {(total_income - total_expense):.2f}")
+        
+    except Exception as e:
+        print(f"\n❌ Erro: {e}")
+        db.rollback()
+        import traceback
+        traceback.print_exc()
+    finally:
+        db.close()
 
 if __name__ == "__main__":
-    create_transactions_for_allanbruno()
+    add_transactions()
+EOF < /dev/null

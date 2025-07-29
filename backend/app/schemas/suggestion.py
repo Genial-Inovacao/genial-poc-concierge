@@ -4,14 +4,14 @@ from datetime import datetime
 from uuid import UUID
 import json
 
-from ..models.suggestion import SuggestionStatus, SuggestionType
+# No longer importing enums since we use strings now
 from ..utils.validators import sanitize_input
 
 
 class SuggestionBase(BaseModel):
     """Base schema for suggestion."""
     content: str
-    type: SuggestionType
+    type: str
     priority: int = Field(5, ge=1, le=10)
     scheduled_date: datetime
     context_data: Optional[str] = None
@@ -34,7 +34,7 @@ class SuggestionBase(BaseModel):
 class SuggestionCreate(SuggestionBase):
     """Schema for creating a suggestion (admin/system only)."""
     user_id: UUID
-    status: SuggestionStatus = SuggestionStatus.PENDING
+    status: str = "pending"
 
 
 class SuggestionUpdate(BaseModel):
@@ -42,7 +42,7 @@ class SuggestionUpdate(BaseModel):
     content: Optional[str] = None
     priority: Optional[int] = Field(None, ge=1, le=10)
     scheduled_date: Optional[datetime] = None
-    status: Optional[SuggestionStatus] = None
+    status: Optional[str] = None
     context_data: Optional[str] = None
     
     @field_validator('content')
@@ -65,7 +65,7 @@ class SuggestionResponse(SuggestionBase):
     """Schema for suggestion response."""
     id: UUID
     user_id: UUID
-    status: SuggestionStatus
+    status: str
     created_at: datetime
     executed_at: Optional[datetime] = None
     
@@ -96,8 +96,8 @@ class SuggestionInteraction(BaseModel):
 
 class SuggestionFilter(BaseModel):
     """Schema for filtering suggestions."""
-    status: Optional[SuggestionStatus] = None
-    type: Optional[SuggestionType] = None
+    status: Optional[str] = None
+    type: Optional[str] = None
     priority_min: Optional[int] = Field(None, ge=1, le=10)
     priority_max: Optional[int] = Field(None, ge=1, le=10)
     start_date: Optional[datetime] = None
