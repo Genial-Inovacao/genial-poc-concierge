@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from sqlalchemy.orm.attributes import flag_modified
 from typing import Dict, Any
 from datetime import datetime, timezone, timedelta
+import json
 
 from ..database import get_db
 from ..models import User, Profile, Transaction, Suggestion, Interaction
@@ -15,6 +17,7 @@ from ..schemas import (
     UserResponse
 )
 from ..services.auth import get_current_active_user
+from ..services.ai_engine import AIEngine
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -133,14 +136,70 @@ async def update_user_profile(
     update_dict = profile_data.dict(exclude_unset=True)
     print(f"Updating profile for user {current_user.username}: {update_dict}")
     
-    # Update fields
-    for field, value in update_dict.items():
-        print(f"Setting {field} = {value}")
-        setattr(profile, field, value)
+    # Track important changes
+    important_changes = []
+    
+    # Check for important field changes
+    for field, new_value in update_dict.items():
+        old_value = getattr(profile, field)
+        
+        # Detect significant changes
+        if field in ['birth_date', 'spouse_name', 'spouse_birth_date'] and old_value != new_value:
+            important_changes.append({
+                'field': field,
+                'old_value': str(old_value) if old_value else None,
+                'new_value': str(new_value) if new_value else None
+            })
+        
+        print(f"Setting {field} = {new_value}")
+        setattr(profile, field, new_value)
     
     profile.updated_at = datetime.now(timezone.utc)
     db.commit()
     db.refresh(profile)
+    
+    # Create audit transaction if important fields changed
+    if important_changes:
+        audit_transaction = Transaction(
+            user_id=current_user.id,
+            type='system',
+            amount=0,
+            date=datetime.now(timezone.utc),
+            category='profile_update',
+            description='Atualização de perfil',
+            metadata_json=json.dumps({
+                'changes': important_changes,
+                'timestamp': datetime.now(timezone.utc).isoformat()
+            })
+        )
+        db.add(audit_transaction)
+        db.commit()
+        
+        # Trigger AI analysis for new suggestions
+        try:
+            ai_engine = AIEngine(db)
+            new_suggestions = ai_engine.analyze_user(current_user)
+            
+            # Save new suggestions
+            for suggestion_data in new_suggestions:
+                # Check if similar suggestion already exists
+                existing = db.query(Suggestion).filter(
+                    Suggestion.user_id == current_user.id,
+                    Suggestion.content == suggestion_data['content'],
+                    Suggestion.status.in_(['pending', 'accepted'])
+                ).first()
+                
+                if not existing:
+                    suggestion = Suggestion(
+                        user_id=current_user.id,
+                        **suggestion_data
+                    )
+                    db.add(suggestion)
+            
+            db.commit()
+            print(f"Generated {len(new_suggestions)} new suggestions after profile update")
+        except Exception as e:
+            print(f"Error running AI analysis after profile update: {e}")
     
     # Debug after save
     print(f"Profile after save - name: {profile.name}, phone: {profile.phone}")
@@ -205,6 +264,7 @@ async def update_user_preferences(
     
     # Update preferences
     current_prefs = profile.preferences_json.copy()
+    old_prefs = current_prefs.copy()
     
     # Update only provided fields
     update_data = preferences.dict(exclude_unset=True)
@@ -216,7 +276,6 @@ async def update_user_preferences(
             current_prefs[key] = value
     
     # Force SQLAlchemy to detect the change in JSON column
-    from sqlalchemy.orm.attributes import flag_modified
     profile.preferences_json = current_prefs
     flag_modified(profile, 'preferences_json')
     profile.updated_at = datetime.now(timezone.utc)
@@ -226,6 +285,56 @@ async def update_user_preferences(
     
     db.commit()
     db.refresh(profile)
+    
+    # Check if important preferences changed
+    important_pref_changes = []
+    if old_prefs.get('categories_of_interest') != current_prefs.get('categories_of_interest'):
+        important_pref_changes.append('categories_of_interest')
+    if old_prefs.get('preferred_times') != current_prefs.get('preferred_times'):
+        important_pref_changes.append('preferred_times')
+    if old_prefs.get('notification_preferences') != current_prefs.get('notification_preferences'):
+        important_pref_changes.append('notification_preferences')
+    
+    # Create audit transaction and trigger AI if preferences changed significantly
+    if important_pref_changes:
+        audit_transaction = Transaction(
+            user_id=current_user.id,
+            type='system',
+            amount=0,
+            date=datetime.now(timezone.utc),
+            category='preferences_update',
+            description='Atualização de preferências',
+            metadata_json=json.dumps({
+                'changed_preferences': important_pref_changes,
+                'timestamp': datetime.now(timezone.utc).isoformat()
+            })
+        )
+        db.add(audit_transaction)
+        db.commit()
+        
+        # Trigger AI analysis
+        try:
+            ai_engine = AIEngine(db)
+            new_suggestions = ai_engine.analyze_user(current_user)
+            
+            for suggestion_data in new_suggestions:
+                existing = db.query(Suggestion).filter(
+                    Suggestion.user_id == current_user.id,
+                    Suggestion.content == suggestion_data['content'],
+                    Suggestion.status.in_(['pending', 'accepted'])
+                ).first()
+                
+                if not existing:
+                    suggestion = Suggestion(
+                        user_id=current_user.id,
+                        **suggestion_data
+                    )
+                    db.add(suggestion)
+            
+            db.commit()
+            print(f"Generated {len(new_suggestions)} new suggestions after preferences update")
+        except Exception as e:
+            print(f"Error running AI analysis after preferences update: {e}")
     
     return profile.preferences_json
 

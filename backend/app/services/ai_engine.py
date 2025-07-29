@@ -1,15 +1,20 @@
 """
-Basic AI Engine for proactive suggestions.
+AI Engine for proactive suggestions with LLM integration.
 
-This module contains the initial implementation of the AI engine
-that analyzes user data and generates proactive suggestions.
+This module contains the implementation of the AI engine that analyzes 
+user data and generates proactive suggestions using either rule-based 
+logic or LLM (Claude) for more natural suggestions.
 """
 from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_, func
+import asyncio
+import json
 
 from ..models import User, Profile, Transaction, Suggestion, SuggestionType, SuggestionStatus
+from ..config import settings
+from .llm_service import llm_service
 
 # Priority levels
 class Priority:
@@ -21,14 +26,17 @@ from ..database import SessionLocal
 
 
 class AIEngine:
-    """Basic AI Engine for generating proactive suggestions."""
+    """AI Engine for generating proactive suggestions with LLM support."""
     
     def __init__(self, db: Session):
         self.db = db
+        self.use_llm = settings.use_llm_for_suggestions and bool(settings.anthropic_api_key)
     
     def analyze_user(self, user: User) -> List[Dict]:
         """
         Analyze user data and generate suggestions.
+        
+        Uses LLM if enabled and available, otherwise falls back to rule-based.
         
         Args:
             user: User to analyze
@@ -38,15 +46,71 @@ class AIEngine:
         """
         suggestions = []
         
-        # Check for upcoming special dates
+        # Always run rule-based analysis for critical time-sensitive suggestions
         date_suggestions = self._analyze_special_dates(user)
         suggestions.extend(date_suggestions)
         
-        # Analyze transaction patterns
-        pattern_suggestions = self._analyze_transaction_patterns(user)
-        suggestions.extend(pattern_suggestions)
+        # If LLM is enabled, use it for more creative suggestions
+        if self.use_llm:
+            llm_suggestions = self._generate_llm_suggestions(user)
+            suggestions.extend(llm_suggestions)
+        else:
+            # Fall back to rule-based pattern analysis
+            pattern_suggestions = self._analyze_transaction_patterns(user)
+            suggestions.extend(pattern_suggestions)
         
-        return suggestions
+        # Remove duplicates and limit suggestions
+        return self._deduplicate_suggestions(suggestions)[:10]
+    
+    def _generate_llm_suggestions(self, user: User) -> List[Dict]:
+        """Generate suggestions using LLM (Claude)."""
+        try:
+            # Get recent transactions
+            recent_transactions = self.db.query(Transaction).filter(
+                Transaction.user_id == user.id,
+                Transaction.date >= datetime.now(timezone.utc) - timedelta(days=90)
+            ).order_by(Transaction.date.desc()).limit(50).all()
+            
+            # Get existing suggestions to avoid duplicates
+            existing_suggestions = self.db.query(Suggestion).filter(
+                Suggestion.user_id == user.id,
+                Suggestion.created_at >= datetime.now(timezone.utc) - timedelta(days=30)
+            ).all()
+            
+            # Run async LLM generation
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            llm_suggestions = loop.run_until_complete(
+                llm_service.generate_suggestions(
+                    user, 
+                    recent_transactions, 
+                    existing_suggestions,
+                    max_suggestions=5
+                )
+            )
+            loop.close()
+            
+            return llm_suggestions
+            
+        except Exception as e:
+            print(f"Error generating LLM suggestions: {e}")
+            # Fall back to rule-based
+            return self._analyze_transaction_patterns(user)
+    
+    def _deduplicate_suggestions(self, suggestions: List[Dict]) -> List[Dict]:
+        """Remove duplicate suggestions based on content similarity."""
+        unique_suggestions = []
+        seen_contents = set()
+        
+        for suggestion in suggestions:
+            # Simple deduplication based on first 50 chars
+            content_key = suggestion['content'][:50].lower()
+            if content_key not in seen_contents:
+                seen_contents.add(content_key)
+                unique_suggestions.append(suggestion)
+        
+        # Sort by priority
+        return sorted(unique_suggestions, key=lambda x: x.get('priority', 5), reverse=True)
     
     def _analyze_special_dates(self, user: User) -> List[Dict]:
         """Analyze upcoming birthdays and anniversaries."""

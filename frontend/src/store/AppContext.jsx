@@ -22,7 +22,7 @@ export const AppProvider = ({ children }) => {
   const [filters, setFilters] = useState({
     status: 'pending',
     category: 'all',
-    dateRange: 'upcoming',
+    dateRange: 'all',
   });
 
   useEffect(() => {

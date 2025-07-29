@@ -22,6 +22,7 @@ router = APIRouter(prefix="/transactions", tags=["Transactions"])
 
 @router.get("/", response_model=List[TransactionResponse])
 async def list_transactions(
+    date_range: Optional[str] = Query(None, pattern="^(today|week|month|year)$"),
     start_date: Optional[datetime] = None,
     end_date: Optional[datetime] = None,
     category: Optional[str] = None,
@@ -37,6 +38,7 @@ async def list_transactions(
     List user transactions with optional filters.
     
     Args:
+        date_range: Predefined date range (today, week, month, year)
         start_date: Filter transactions after this date
         end_date: Filter transactions before this date
         category: Filter by category
@@ -51,6 +53,22 @@ async def list_transactions(
     Returns:
         List of transactions
     """
+    # Process date_range parameter
+    if date_range and not start_date and not end_date:
+        now = datetime.now(timezone.utc)
+        if date_range == "today":
+            start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+            end_date = now.replace(hour=23, minute=59, second=59, microsecond=999999)
+        elif date_range == "week":
+            start_date = now - timedelta(days=7)
+            end_date = now
+        elif date_range == "month":
+            start_date = now - timedelta(days=30)
+            end_date = now
+        elif date_range == "year":
+            start_date = now - timedelta(days=365)
+            end_date = now
+    
     # Build query
     query = db.query(Transaction).filter(Transaction.user_id == current_user.id)
     

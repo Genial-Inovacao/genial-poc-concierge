@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, DateTime, ForeignKey, Numeric, Index
+from sqlalchemy import Column, String, DateTime, ForeignKey, Numeric, Index, Text
 from sqlalchemy.orm import relationship
 import uuid
 from datetime import datetime, timezone
@@ -55,6 +55,7 @@ class Transaction(Base):
     
     location = Column(String(255), nullable=True)
     description = Column(String(500), nullable=False)
+    metadata_json = Column(Text, nullable=True)  # JSON string for additional metadata
     
     # Timestamp fields
     created_at = Column(

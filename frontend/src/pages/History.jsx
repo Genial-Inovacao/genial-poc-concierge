@@ -33,17 +33,22 @@ const History = () => {
           action: filters.status !== 'all' ? filters.status : undefined,
         };
         const data = await analyticsService.getActivityHistory(params);
+        console.log('Activities data:', data);
         setActivities(data || []);
       } else {
         const params = {
           date_range: filters.dateRange,
           type: filters.type !== 'all' ? filters.type : undefined,
         };
+        console.log('Fetching transactions with params:', params);
         const data = await analyticsService.getTransactions(params);
+        console.log('Transactions data:', data);
         setTransactions(data || []);
       }
     } catch (err) {
       console.error('Erro ao carregar dados:', err);
+      setTransactions([]);
+      setActivities([]);
     } finally {
       setLoading(false);
     }
@@ -180,9 +185,9 @@ const History = () => {
                 className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md"
               >
                 <option value="all">Todos</option>
+                <option value="income">Receita</option>
                 <option value="savings">Economia</option>
                 <option value="expense">Despesa</option>
-                <option value="reminder">Lembrete</option>
               </select>
             </div>
           )}
@@ -294,24 +299,27 @@ const History = () => {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-medium text-gray-900">
-                          {transaction.description}
+                          {transaction.description || 'Transação'}
                         </p>
                         <p className="text-sm text-gray-500">
-                          {formatDate(transaction.created_at)}
+                          {formatDate(transaction.date)}
                         </p>
                       </div>
                       <div className="text-right">
                         <p className={`text-sm font-medium ${
+                          transaction.type === 'income' ? 'text-green-600' :
                           transaction.type === 'savings' ? 'text-green-600' : 
                           transaction.type === 'expense' ? 'text-red-600' : 
                           'text-gray-900'
                         }`}>
-                          {transaction.type === 'savings' ? '+' : 
+                          {transaction.type === 'income' ? '+' : 
+                           transaction.type === 'savings' ? '+' : 
                            transaction.type === 'expense' ? '-' : ''}
-                          R$ {transaction.amount?.toFixed(2) || '0,00'}
+                          R$ {transaction.amount ? parseFloat(transaction.amount).toFixed(2).replace('.', ',') : '0,00'}
                         </p>
                         <p className="text-xs text-gray-500">
-                          {transaction.type === 'savings' ? 'Economia' :
+                          {transaction.type === 'income' ? 'Receita' :
+                           transaction.type === 'savings' ? 'Economia' :
                            transaction.type === 'expense' ? 'Despesa' :
                            'Lembrete'}
                         </p>

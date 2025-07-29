@@ -30,6 +30,13 @@ class Settings(BaseSettings):
     ai_engine_enabled: bool = True
     suggestion_generation_interval_hours: int = 6
     
+    # LLM Configuration (Claude/Anthropic)
+    anthropic_api_key: str = os.getenv("ANTHROPIC_API_KEY", "")
+    llm_model: str = "claude-3-7-sonnet-20250219"  # Latest Sonnet 3.7 - good balance
+    llm_max_tokens: int = 1000
+    llm_temperature: float = 0.7
+    use_llm_for_suggestions: bool = True  # Toggle between LLM and rule-based
+    
     # Rate Limiting
     rate_limit_per_minute: int = 60
     
