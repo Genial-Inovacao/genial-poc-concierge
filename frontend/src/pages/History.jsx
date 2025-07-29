@@ -14,36 +14,59 @@ const History = () => {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
-    dateRange: 'week',
+    dateRange: 'all',
     type: 'all',
     status: 'all',
   });
   const [activeTab, setActiveTab] = useState('activities');
+  
+  // Paginação
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMoreData, setHasMoreData] = useState(true);
+  const itemsPerPage = 20;
 
   useEffect(() => {
-    loadData();
+    setCurrentPage(1); // Reset para primeira página quando mudar filtros/tab
+    loadData(1);
   }, [filters, activeTab]);
 
-  const loadData = async () => {
+  useEffect(() => {
+    loadData(currentPage);
+  }, [currentPage]);
+
+  const loadData = async (page = 1) => {
     setLoading(true);
     try {
+      const skip = (page - 1) * itemsPerPage;
+      console.log(`Loading page ${page}, skip: ${skip}, limit: ${itemsPerPage}`);
+      
       if (activeTab === 'activities') {
         const params = {
           date_range: filters.dateRange,
           action: filters.status !== 'all' ? filters.status : undefined,
+          skip: skip,
+          limit: itemsPerPage,
         };
         const data = await analyticsService.getActivityHistory(params);
         console.log('Activities data:', data);
         setActivities(data || []);
+        
+        // Se retornou menos itens que o limite, não há mais dados
+        setHasMoreData(data && data.length === itemsPerPage);
       } else {
         const params = {
           date_range: filters.dateRange,
           type: filters.type !== 'all' ? filters.type : undefined,
+          skip: skip,
+          limit: itemsPerPage,
         };
         console.log('Fetching transactions with params:', params);
         const data = await analyticsService.getTransactions(params);
         console.log('Transactions data:', data);
         setTransactions(data || []);
+        
+        // Se retornou menos itens que o limite, não há mais dados
+        setHasMoreData(data && data.length === itemsPerPage);
       }
     } catch (err) {
       console.error('Erro ao carregar dados:', err);
@@ -157,6 +180,7 @@ const History = () => {
               <option value="week">Última Semana</option>
               <option value="month">Último Mês</option>
               <option value="year">Último Ano</option>
+              <option value="all">Todas</option>
             </select>
           </div>
 
@@ -330,6 +354,116 @@ const History = () => {
               ))}
             </ul>
           )}
+        </div>
+      )}
+      
+      {/* Controles de Paginação */}
+      {!loading && (activeTab === 'activities' ? activities.length > 0 : transactions.length > 0) && (
+        <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6 mt-4">
+          <div className="flex-1 flex justify-between sm:hidden">
+            <button
+              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+              disabled={currentPage === 1}
+              className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium rounded-md ${
+                currentPage === 1
+                  ? 'border-gray-300 text-gray-300 bg-gray-50 cursor-not-allowed'
+                  : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50'
+              }`}
+            >
+              Anterior
+            </button>
+            <span className="text-sm text-gray-700">
+              Página {currentPage}
+            </span>
+            <button
+              onClick={() => setCurrentPage(currentPage + 1)}
+              disabled={!hasMoreData}
+              className={`ml-3 relative inline-flex items-center px-4 py-2 border text-sm font-medium rounded-md ${
+                !hasMoreData
+                  ? 'border-gray-300 text-gray-300 bg-gray-50 cursor-not-allowed'
+                  : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50'
+              }`}
+            >
+              Próximo
+            </button>
+          </div>
+          <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm text-gray-700">
+                Mostrando{' '}
+                <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span>
+                {' '}a{' '}
+                <span className="font-medium">
+                  {Math.min(
+                    currentPage * itemsPerPage,
+                    (currentPage - 1) * itemsPerPage + (activeTab === 'activities' ? activities.length : transactions.length)
+                  )}
+                </span>
+                {' '}resultados
+              </p>
+            </div>
+            <div>
+              <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                <button
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                  className={`relative inline-flex items-center px-2 py-2 rounded-l-md border text-sm font-medium ${
+                    currentPage === 1
+                      ? 'border-gray-300 bg-gray-50 text-gray-300 cursor-not-allowed'
+                      : 'border-gray-300 bg-white text-gray-500 hover:bg-gray-50'
+                  }`}
+                >
+                  <span className="sr-only">Anterior</span>
+                  <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                </button>
+                
+                {/* Números de página - mostrar páginas ao redor da atual */}
+                {(() => {
+                  const pages = [];
+                  const startPage = Math.max(1, currentPage - 2);
+                  const endPage = currentPage + 2;
+                  
+                  for (let i = startPage; i <= endPage; i++) {
+                    // Não mostrar páginas futuras se não há mais dados
+                    if (i > currentPage && !hasMoreData && i > currentPage + 1) break;
+                    
+                    pages.push(
+                      <button
+                        key={i}
+                        onClick={() => setCurrentPage(i)}
+                        className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                          currentPage === i
+                            ? 'z-10 bg-primary-50 border-primary-500 text-primary-600'
+                            : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                        }`}
+                      >
+                        {i}
+                      </button>
+                    );
+                  }
+                  
+                  return pages;
+                })()}
+                
+                <button
+                  onClick={() => setCurrentPage(currentPage + 1)}
+                  disabled={!hasMoreData}
+                  className={`relative inline-flex items-center px-2 py-2 rounded-r-md border text-sm font-medium ${
+                    !hasMoreData
+                      ? 'border-gray-300 bg-gray-50 text-gray-300 cursor-not-allowed'
+                      : 'border-gray-300 bg-white text-gray-500 hover:bg-gray-50'
+                  }`}
+                >
+                  <span className="sr-only">Próximo</span>
+                  <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              </nav>
+            </div>
+          </div>
         </div>
       )}
     </div>

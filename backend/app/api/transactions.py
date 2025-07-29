@@ -22,7 +22,7 @@ router = APIRouter(prefix="/transactions", tags=["Transactions"])
 
 @router.get("/", response_model=List[TransactionResponse])
 async def list_transactions(
-    date_range: Optional[str] = Query(None, pattern="^(today|week|month|year)$"),
+    date_range: Optional[str] = Query(None, pattern="^(today|week|month|year|all)$"),
     start_date: Optional[datetime] = None,
     end_date: Optional[datetime] = None,
     category: Optional[str] = None,

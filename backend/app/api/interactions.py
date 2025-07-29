@@ -17,7 +17,7 @@ router = APIRouter(prefix="/interactions", tags=["Interactions"])
 async def list_interactions(
     action: Optional[InteractionAction] = None,
     suggestion_id: Optional[UUID] = None,
-    date_range: Optional[str] = Query(None, pattern="^(today|week|month|year)$"),
+    date_range: Optional[str] = Query(None, pattern="^(today|week|month|year|all)$"),
     start_date: Optional[datetime] = None,
     end_date: Optional[datetime] = None,
     skip: int = Query(0, ge=0),
