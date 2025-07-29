@@ -1,152 +1,314 @@
-# Frontend - Sistema Concierge IA
+# AI Concierge Frontend
 
-Frontend moderno e responsivo para o Sistema de Concierge de IA Proativo, desenvolvido com React, Vite e Tailwind CSS.
+Modern and responsive frontend for the AI-Powered Proactive Concierge System, built with React, Vite, and Tailwind CSS.
 
-## Tecnologias Utilizadas
+## Features
 
-- **React 18** - Framework JavaScript para construção de interfaces
-- **Vite** - Build tool rápido e moderno
-- **Tailwind CSS** - Framework CSS utilitário
-- **React Router v6** - Roteamento de páginas
-- **Axios** - Cliente HTTP para requisições à API
-- **Heroicons** - Ícones SVG otimizados
-- **Context API** - Gerenciamento de estado global
+- 🎨 Modern UI with Tailwind CSS
+- 🔐 JWT Authentication with auto-refresh
+- 📱 Fully responsive design
+- 🎯 Real-time AI suggestions display
+- 📊 Interactive analytics dashboard
+- 👤 User profile and preferences management
+- 📜 Transaction and interaction history
+- 🔍 Advanced filtering and search
+- 🌐 Multi-language ready (Portuguese default)
+- ⚡ Fast performance with Vite
 
-## Estrutura do Projeto
+## Technologies
+
+- **React 18** - UI framework
+- **Vite** - Fast build tool
+- **Tailwind CSS** - Utility-first CSS framework
+- **React Router v6** - Client-side routing
+- **Axios** - HTTP client
+- **Heroicons** - Beautiful hand-crafted SVG icons
+- **Context API** - State management
+- **Chart.js** - Data visualization (planned)
+
+## Project Structure
 
 ```
 frontend/
 ├── src/
-│   ├── components/      # Componentes reutilizáveis
-│   │   ├── auth/       # Componentes de autenticação
-│   │   ├── common/     # Componentes comuns (Layout, Loading, etc)
-│   │   ├── dashboard/  # Componentes do dashboard
-│   │   └── suggestions/# Componentes de sugestões
-│   ├── pages/          # Páginas da aplicação
-│   ├── services/       # Serviços de API
-│   ├── store/          # Context API e estado global
-│   ├── utils/          # Utilitários e helpers
-│   └── main.jsx        # Entrada da aplicação
-├── public/             # Arquivos públicos
-├── .env.example        # Exemplo de variáveis de ambiente
-└── package.json        # Dependências e scripts
+│   ├── components/      # Reusable components
+│   │   ├── auth/       # Authentication components
+│   │   ├── common/     # Common components (Layout, Loading)
+│   │   ├── dashboard/  # Dashboard components
+│   │   ├── suggestions/# Suggestion cards and filters
+│   │   ├── profile/    # Profile management
+│   │   └── history/    # History views
+│   ├── pages/          # Page components
+│   │   ├── Login.jsx   # Login page
+│   │   ├── Register.jsx# Registration page
+│   │   ├── Dashboard.jsx# Main dashboard
+│   │   ├── Profile.jsx # User profile
+│   │   └── History.jsx # Transaction history
+│   ├── services/       # API services
+│   │   ├── api.js      # Axios instance
+│   │   ├── auth.js     # Auth endpoints
+│   │   ├── users.js    # User endpoints
+│   │   ├── suggestions.js# Suggestion endpoints
+│   │   └── transactions.js# Transaction endpoints
+│   ├── store/          # Context providers
+│   │   ├── AuthContext.jsx # Authentication state
+│   │   └── AppContext.jsx  # Application state
+│   ├── utils/          # Utility functions
+│   │   ├── constants.js# App constants
+│   │   └── helpers.js  # Helper functions
+│   └── main.jsx        # App entry point
+├── public/             # Static assets
+├── .env.example        # Environment template
+└── package.json        # Dependencies
 ```
 
-## Instalação e Configuração
+## Installation
 
-1. **Instalar dependências:**
+1. **Clone the repository:**
+```bash
+cd frontend
+```
+
+2. **Install dependencies:**
 ```bash
 npm install
 ```
 
-2. **Configurar variáveis de ambiente:**
+3. **Configure environment:**
 ```bash
 cp .env.example .env
 ```
 
-Edite o arquivo `.env` com as configurações corretas:
-```
+4. **Edit `.env` with your settings:**
+```env
 VITE_API_URL=http://localhost:8000/api
-VITE_APP_NAME=Concierge IA
+VITE_APP_NAME=AI Concierge
+VITE_APP_VERSION=1.0.0
 ```
 
-3. **Executar em modo de desenvolvimento:**
+5. **Start development server:**
 ```bash
 npm run dev
 ```
 
-4. **Build para produção:**
-```bash
-npm run build
-```
+The app will be available at `http://localhost:3000`
 
-## Funcionalidades Implementadas
+## Available Scripts
 
-### Autenticação
-- Login com email e senha
-- Registro de novos usuários
-- Gerenciamento de tokens JWT
-- Auto-refresh de token
-- Proteção de rotas privadas
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
+- `npm run lint` - Run ESLint (when configured)
+- `npm run format` - Format code with Prettier (when configured)
+
+## Features Overview
+
+### Authentication
+- Secure login with JWT tokens
+- User registration with validation
+- Automatic token refresh
+- Protected routes
+- Logout functionality
+- Remember me option
 
 ### Dashboard
-- Visualização de sugestões personalizadas
-- Estatísticas resumidas (dias ativo, ações executadas, taxa de aceitação, economia)
-- Filtros por status, categoria e período
-- Ações de aceitar, rejeitar ou adiar sugestões
+- **Suggestion Cards**: Display AI-generated suggestions with:
+  - Priority indicators
+  - Category icons
+  - Quick actions (Accept/Reject/Snooze)
+  - Detailed content view
+- **Statistics Widgets**: 
+  - Days active counter
+  - Executed actions
+  - Acceptance rate
+  - Total savings
+- **Advanced Filters**:
+  - Status filter (Active/Accepted/Rejected)
+  - Category filter
+  - Time period selector
 
-### Perfil e Preferências
-- Edição de dados pessoais
-- Upload de foto de perfil
-- Configuração de preferências de notificação
-- Seleção de categorias de interesse
-- Definição de horários preferenciais
-- Limite diário de sugestões
+### Profile Management
+- Edit personal information
+- Update preferences:
+  - Notification settings
+  - Categories of interest
+  - Preferred times
+  - Daily suggestion limit
+- Profile photo upload (planned)
+- Special dates configuration
 
-### Histórico
-- Visualização de todas as atividades
-- Histórico de transações
-- Filtros por período e tipo
-- Detalhes de cada interação
+### History View
+- Transaction history with filters
+- Interaction timeline
+- Detailed activity logs
+- Export functionality (planned)
 
-## Componentes Principais
+## Component Library
 
-### Layout
-- Navbar responsiva com menu mobile
-- Navegação entre páginas
-- Exibição do usuário logado
+### Core Components
 
-### SuggestionCard
-- Exibição detalhada de sugestões
-- Ícones por categoria
-- Indicador de prioridade
-- Botões de ação
-- Modal de adiar sugestão
+**Layout**
+- Responsive navbar with mobile menu
+- Footer with quick links
+- Loading states
+- Error boundaries
 
-### StatsWidget
-- Cards de estatísticas
-- Ícones customizados
-- Cores por tipo de métrica
+**SuggestionCard**
+- Dynamic icons based on type
+- Priority color coding
+- Interaction buttons
+- Snooze modal with date picker
 
-## Padrões de Código
+**StatsWidget**
+- Animated counters
+- Trend indicators
+- Custom icons
+- Responsive grid
 
-### Estado Global
-Utilizamos Context API para gerenciamento de estado:
-- `AuthContext`: Autenticação e dados do usuário
-- `AppContext`: Sugestões, filtros e estatísticas
+**FilterBar**
+- Multi-select dropdowns
+- Date range picker
+- Quick presets
+- Clear filters option
 
-### Serviços de API
-Todos os serviços seguem o padrão:
+## State Management
+
+### AuthContext
+Manages authentication state:
+- User data
+- Auth tokens
+- Login/logout methods
+- Token refresh logic
+
+### AppContext
+Manages application state:
+- Suggestions list
+- Active filters
+- User statistics
+- Loading states
+- Error handling
+
+## API Integration
+
+All API calls follow a consistent pattern:
+
 ```javascript
-const service = {
-  async getItems(params) {
-    const response = await api.get('/endpoint', { params });
+// Example service
+export const suggestionService = {
+  async getSuggestions(params) {
+    const response = await api.get('/suggestions/', { params });
+    return response.data;
+  },
+  
+  async interactWithSuggestion(id, action, data) {
+    const response = await api.post(`/suggestions/${id}/interact`, {
+      action,
+      ...data
+    });
     return response.data;
   }
 };
 ```
 
-### Componentes
-- Componentes funcionais com hooks
-- Props tipadas com destructuring
-- Estados locais com useState
-- Efeitos colaterais com useEffect
+## Styling Guidelines
 
-## Scripts Disponíveis
+- Uses Tailwind CSS utility classes
+- Custom color palette defined in `tailwind.config.js`
+- Responsive breakpoints: sm, md, lg, xl
+- Dark mode support (planned)
+- Consistent spacing and typography
 
-- `npm run dev` - Inicia servidor de desenvolvimento
-- `npm run build` - Cria build de produção
-- `npm run preview` - Preview da build de produção
-- `npm run lint` - Executa linter (quando configurado)
+## Best Practices
 
-## Próximos Passos
+1. **Component Structure**:
+   - Functional components with hooks
+   - Props destructuring
+   - Clear prop types
+   - Memoization where needed
 
-1. Implementar notificações push
-2. Adicionar gráficos e visualizações avançadas
-3. Criar modo escuro
-4. Implementar PWA para funcionamento offline
-5. Adicionar testes unitários e de integração
+2. **State Management**:
+   - Local state for UI-only concerns
+   - Context for shared state
+   - Avoid prop drilling
 
-## Suporte
+3. **Performance**:
+   - Lazy loading for routes
+   - Image optimization
+   - Code splitting
+   - Debounced API calls
 
-Para questões e suporte, consulte a documentação do backend ou abra uma issue no repositório.
+4. **Error Handling**:
+   - Try-catch blocks for async operations
+   - User-friendly error messages
+   - Fallback UI components
+
+## Development Workflow
+
+1. **Feature Development**:
+   - Create feature branch
+   - Implement component
+   - Add to appropriate page
+   - Test responsiveness
+   - Submit PR
+
+2. **Testing**:
+   - Manual testing on different devices
+   - Cross-browser compatibility
+   - API integration testing
+   - Performance profiling
+
+## Troubleshooting
+
+### Common Issues
+
+1. **API Connection Failed**
+   - Check if backend is running on port 8000
+   - Verify VITE_API_URL in `.env`
+   - Check CORS settings
+
+2. **Authentication Errors**
+   - Clear localStorage
+   - Check token expiration
+   - Verify API endpoints
+
+3. **Styling Issues**
+   - Run `npm run build` to regenerate CSS
+   - Check Tailwind configuration
+   - Clear browser cache
+
+4. **Build Errors**
+   - Delete `node_modules` and reinstall
+   - Check Node.js version (16+)
+   - Verify all dependencies
+
+## Future Enhancements
+
+1. **UI/UX**:
+   - Dark mode toggle
+   - Animation improvements
+   - Accessibility features
+   - Multi-language support
+
+2. **Features**:
+   - Push notifications
+   - Offline support (PWA)
+   - Data export
+   - Advanced analytics charts
+
+3. **Technical**:
+   - Unit tests with Jest
+   - E2E tests with Cypress
+   - Performance monitoring
+   - Error tracking
+
+## Contributing
+
+1. Fork the repository
+2. Create feature branch
+3. Commit changes
+4. Push to branch
+5. Open pull request
+
+## License
+
+MIT
