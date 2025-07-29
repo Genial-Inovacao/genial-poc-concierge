@@ -68,14 +68,14 @@ const Dashboard = () => {
             color="bg-primary-500"
           />
           <StatsWidget
-            title="Ações Executadas"
+            title="Ações Realizadas"
             value={stats?.total_actions || 0}
             icon={CheckCircleIcon}
             color="bg-green-500"
           />
           <StatsWidget
             title="Taxa de Aceitação"
-            value={`${stats?.acceptance_rate || 0}%`}
+            value={`${Math.round((stats?.acceptance_rate || 0) * 100)}%`}
             icon={ChartBarIcon}
             color="bg-blue-500"
           />

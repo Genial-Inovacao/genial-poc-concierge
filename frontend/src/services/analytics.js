@@ -2,7 +2,7 @@ import api from './api';
 
 const analyticsService = {
   async getDashboardStats() {
-    const response = await api.get('/analytics/dashboard');
+    const response = await api.get('/suggestions/stats');
     return response.data;
   },
 
@@ -13,6 +13,11 @@ const analyticsService = {
 
   async getEngagementMetrics() {
     const response = await api.get('/analytics/engagement');
+    return response.data;
+  },
+
+  async getActivityHistory(params = {}) {
+    const response = await api.get('/interactions', { params });
     return response.data;
   },
 

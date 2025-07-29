@@ -130,21 +130,12 @@ async def list_suggestions(
     return suggestions
 
 
-@router.get("/stats", response_model=SuggestionStats)
+@router.get("/stats")
 async def get_suggestion_stats(
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
-    """
-    Get suggestion statistics for the current user.
-    
-    Args:
-        current_user: Current authenticated user
-        db: Database session
-        
-    Returns:
-        Suggestion statistics
-    """
+    """Get suggestion statistics for the current user."""
     # Get total counts by status
     total_suggestions = db.query(Suggestion).filter(
         Suggestion.user_id == current_user.id
@@ -211,18 +202,39 @@ async def get_suggestion_stats(
     else:
         average_time_to_action = None
     
-    return SuggestionStats(
-        total_suggestions=total_suggestions,
-        pending_suggestions=pending_suggestions,
-        accepted_suggestions=accepted_suggestions,
-        rejected_suggestions=rejected_suggestions,
-        executed_suggestions=executed_suggestions,
-        acceptance_rate=acceptance_rate,
-        execution_rate=execution_rate,
-        by_type=by_type,
-        by_status=by_status,
-        average_time_to_action=average_time_to_action
-    )
+    # Calculate days active (days since user creation)
+    now = datetime.now(timezone.utc)
+    # Make created_at timezone aware if it isn't already
+    if current_user.created_at.tzinfo is None:
+        created_at = current_user.created_at.replace(tzinfo=timezone.utc)
+    else:
+        created_at = current_user.created_at
+    days_active = (now - created_at).days + 1
+    
+    # Calculate total actions (all interactions except VIEWED)
+    total_actions = db.query(Interaction).filter(
+        Interaction.user_id == current_user.id,
+        Interaction.action != InteractionAction.VIEWED
+    ).count()
+    
+    # Calculate total savings (placeholder - would need real calculation)
+    total_savings = 0.0
+    
+    return {
+        "total_suggestions": total_suggestions,
+        "pending_suggestions": pending_suggestions,
+        "accepted_suggestions": accepted_suggestions,
+        "rejected_suggestions": rejected_suggestions,
+        "executed_suggestions": executed_suggestions,
+        "acceptance_rate": acceptance_rate,
+        "execution_rate": execution_rate,
+        "by_type": by_type,
+        "by_status": by_status,
+        "average_time_to_action": average_time_to_action,
+        "days_active": days_active,
+        "total_actions": total_actions,
+        "total_savings": total_savings
+    }
 
 
 @router.get("/{suggestion_id}", response_model=SuggestionResponse)
