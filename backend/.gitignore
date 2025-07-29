@@ -16,10 +16,8 @@ VENV/
 .env.*.local
 
 # Database
-*.db
 *.sqlite
 *.sqlite3
-concierge.db
 
 # IDE
 .vscode/
