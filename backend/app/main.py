@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 
 from .config import settings
 from .database import engine, Base
-from .api import auth, users, suggestions, transactions, analytics
+from .api import auth, users, suggestions, transactions, analytics, interactions
 
 
 # Create all tables on startup
@@ -72,3 +72,4 @@ app.include_router(users.router, prefix="/api")
 app.include_router(suggestions.router, prefix="/api")
 app.include_router(transactions.router, prefix="/api")
 app.include_router(analytics.router, prefix="/api")
+app.include_router(interactions.router, prefix="/api")

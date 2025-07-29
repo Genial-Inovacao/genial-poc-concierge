@@ -30,17 +30,17 @@ const History = () => {
       if (activeTab === 'activities') {
         const params = {
           date_range: filters.dateRange,
-          status: filters.status !== 'all' ? filters.status : undefined,
+          action: filters.status !== 'all' ? filters.status : undefined,
         };
         const data = await analyticsService.getActivityHistory(params);
-        setActivities(data.activities || []);
+        setActivities(data || []);
       } else {
         const params = {
           date_range: filters.dateRange,
           type: filters.type !== 'all' ? filters.type : undefined,
         };
         const data = await analyticsService.getTransactions(params);
-        setTransactions(data.transactions || []);
+        setTransactions(data || []);
       }
     } catch (err) {
       console.error('Erro ao carregar dados:', err);
@@ -71,6 +71,7 @@ const History = () => {
       case 'rejected':
         return <XCircleIcon className="h-5 w-5 text-red-500" />;
       case 'postponed':
+      case 'snoozed':
         return <ClockIcon className="h-5 w-5 text-yellow-500" />;
       default:
         return <ClockIcon className="h-5 w-5 text-gray-500" />;
@@ -82,7 +83,10 @@ const History = () => {
       accepted: 'Aceita',
       rejected: 'Rejeitada',
       postponed: 'Adiada',
+      snoozed: 'Adiada',
       pending: 'Pendente',
+      executed: 'Executada',
+      viewed: 'Visualizada',
     };
     return labels[status] || status;
   };
@@ -163,7 +167,7 @@ const History = () => {
                 <option value="all">Todos</option>
                 <option value="accepted">Aceitas</option>
                 <option value="rejected">Rejeitadas</option>
-                <option value="postponed">Adiadas</option>
+                <option value="snoozed">Adiadas</option>
               </select>
             </div>
           ) : (
@@ -233,24 +237,24 @@ const History = () => {
                   <div className="px-4 py-4 sm:px-6">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center">
-                        {getStatusIcon(activity.status)}
+                        {getStatusIcon(activity.action)}
                         <div className="ml-4">
                           <p className="text-sm font-medium text-gray-900">
-                            {activity.suggestion?.title}
+                            {activity.suggestion?.content}
                           </p>
                           <p className="text-sm text-gray-500">
-                            {getCategoryLabel(activity.suggestion?.category)} • {formatDate(activity.created_at)}
+                            {activity.suggestion?.type} • {formatDate(activity.timestamp)}
                           </p>
                         </div>
                       </div>
                       <div className="flex items-center">
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          activity.status === 'accepted' ? 'bg-green-100 text-green-800' :
-                          activity.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                          activity.status === 'postponed' ? 'bg-yellow-100 text-yellow-800' :
+                          activity.action === 'accepted' ? 'bg-green-100 text-green-800' :
+                          activity.action === 'rejected' ? 'bg-red-100 text-red-800' :
+                          activity.action === 'snoozed' ? 'bg-yellow-100 text-yellow-800' :
                           'bg-gray-100 text-gray-800'
                         }`}>
-                          {getStatusLabel(activity.status)}
+                          {getStatusLabel(activity.action)}
                         </span>
                         {activity.suggestion?.metadata?.estimated_savings && (
                           <span className="ml-2 text-sm text-green-600">
@@ -259,9 +263,9 @@ const History = () => {
                         )}
                       </div>
                     </div>
-                    {activity.suggestion?.description && (
+                    {activity.suggestion?.content && (
                       <p className="mt-2 text-sm text-gray-600">
-                        {activity.suggestion.description}
+                        {activity.suggestion.content}
                       </p>
                     )}
                   </div>

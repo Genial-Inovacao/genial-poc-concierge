@@ -47,6 +47,14 @@ from .analytics import (
     InsightReport
 )
 
+from .interaction import (
+    InteractionBase,
+    InteractionCreate,
+    InteractionResponse,
+    InteractionStats,
+    InteractionFilter
+)
+
 __all__ = [
     # Auth schemas
     "UserCreate",
@@ -89,5 +97,12 @@ __all__ = [
     "UserBehaviorAnalysis",
     "DashboardStats",
     "EngagementMetrics",
-    "InsightReport"
+    "InsightReport",
+    
+    # Interaction schemas
+    "InteractionBase",
+    "InteractionCreate",
+    "InteractionResponse",
+    "InteractionStats",
+    "InteractionFilter"
 ]
